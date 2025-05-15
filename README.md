@@ -2,7 +2,7 @@
 
 ## Video de funcionamiento
 
-[![Título del video](https://img.youtube.com/vi/ID_DEL_VIDEO/hqdefault.jpg)](https://www.youtube.com/watch?v=ID_DEL_VIDEO)
+[![Título del video](https://img.youtube.com/vi/3N87LXHQM5w/hqdefault.jpg)](https://youtu.be/3N87LXHQM5w)
 
 ## Herramientas de desarrollo, versión usada y enfoque de dispositivo
 
