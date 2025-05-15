@@ -7,6 +7,8 @@
 
 import Foundation
 import Combine
+import PulseProxy
+import Pulse
 
 final class WeatherAPIService: APIServiceType {
 
@@ -16,6 +18,7 @@ final class WeatherAPIService: APIServiceType {
 
     init(baseURL: String =  "https://api.open-meteo.com/v1/forecast") {
         self.baseURL = baseURL
+        NetworkLogger.enableProxy()
     }
  
     func call<Request>(from endpoint: Request) -> AnyPublisher<Request.ModelType, Error> where Request : APIRequestType {

@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import PulseUI
+import Pulse
 
 struct HomeView: View {
     @ObservedObject private(set) var homeViewModel: HomeViewModel
@@ -14,6 +16,7 @@ struct HomeView: View {
     @State private var goToAddPlace: Bool = false
     @State private var places: [Place] = []
     @State private var mostrarInfo = false
+    @State private var showPulse = false
 
     @Environment(\.managedObjectContext) private var viewContext
 
@@ -26,6 +29,19 @@ struct HomeView: View {
                         .font(.system(size: 64, weight: .bold))
 
                     Spacer()
+
+                    Button(action: {
+                        print("Abrir pulse")
+                        showPulse = true
+                    }) {
+                        Image(systemName: "globe")
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.brown)
+                            .clipShape(Circle())
+                    }.sheet(isPresented: $showPulse) {
+                        ConsoleView()
+                    }
 
                     Button(action: {
                         print("presiono boton")
@@ -100,7 +116,7 @@ struct HomeView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
                         ForEach(Array(places.enumerated()), id: \.offset) { index, place in
-                            let imageName = homeViewModel.imagesList[index % (places.count - 1)]
+                            let imageName = homeViewModel.imagesList[index > homeViewModel.imagesList.count ? 0 : index]
                             RoomCard(imageName: imageName, placeName: place.name) {
                                 selectedPlace = imageName
                                 placeName = place.displayName
