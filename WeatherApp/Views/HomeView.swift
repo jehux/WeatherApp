@@ -8,10 +8,12 @@
 import SwiftUI
 
 struct HomeView: View {
-    //@ObservedObject private(set) var HomeViewModel: HomeViewModel
+    @ObservedObject private(set) var homeViewModel: HomeViewModel
     @State private var selectedPlace: String? = nil
-    @State private var placeName: String = "Apatlaco"
+    @State private var placeName: String = ""
     @State private var goToAddPlace: Bool = false
+    @State private var places: [Place] = []
+    @State private var mostrarInfo = false
 
     @Environment(\.managedObjectContext) private var viewContext
 
@@ -20,13 +22,12 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 20) {
                 // Header superior
                 HStack {
-                    Text("27°")
+                    Text("\(homeViewModel.temperature)°")
                         .font(.system(size: 64, weight: .bold))
 
                     Spacer()
 
                     Button(action: {
-                        // Acción del botón "+"
                         print("presiono boton")
                         goToAddPlace = true
                     }) {
@@ -45,27 +46,29 @@ struct HomeView: View {
                     Text(placeName)
                         .font(.title3)
                         .bold()
-                    Text("Bienvenido datos del clima:")
+                    Text("Bienvenido a datos del clima:")
                         .font(.subheadline)
                         .foregroundColor(.gray)
                 }
 
-                // Avatares
+                // Mas info de clima
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
-                        ForEach(0..<3) { index in
-                            Image(systemName: "person.crop.circle")
-                                .resizable()
-                                .frame(width: 40, height: 40)
+                        VStack(spacing: 8) {
+                            Image(systemName: homeViewModel.isDaytime ? "sun.max.fill" : "moon.fill")
+                                .font(.system(size: 40))
+                                .foregroundColor(homeViewModel.isDaytime ? .yellow : .blue)
+                            Text(homeViewModel.isDaytime ? "Día" : "Noche")
+                                .font(.subheadline)
+                                .foregroundColor(.white)
                         }
-
-                        Button(action: {}) {
-                            Image(systemName: "plus")
-                                .resizable()
-                                .frame(width: 20, height: 20)
-                                .padding(10)
-                                .background(Color(.systemGray5))
-                                .clipShape(Circle())
+                        VStack(spacing: 8) {
+                            Image(systemName: "wind")
+                                .font(.system(size: 40))
+                                .foregroundColor(.cyan)
+                            Text("viento \(homeViewModel.windspeed) km/h")
+                                .font(.subheadline)
+                                .foregroundColor(.white)
                         }
                     }
                 }
@@ -75,30 +78,55 @@ struct HomeView: View {
                         .resizable()
                 }
 
-                // All Rooms header
+                // favoritos header
                 Spacer()
                 HStack {
                     Text("Clima en tus ciudades")
                         .font(.headline)
                     Spacer()
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(.gray)
+                    Button(action: {
+                        mostrarInfo = true
+                    }) {
+                        Image(systemName: "info.circle")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+                    }
+                    .sheet(isPresented: $mostrarInfo) {
+                        OwnerInfoViewControllerWrapper()
+                    }
                 }
 
-                // Scroll horizontal de cuartos
+                // Scroll horizontal de favoritos
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
-                        RoomCard(imageName: "spain", placeName: "España") {
-                            selectedPlace = "spain"
-                            placeName = "España"
+                        ForEach(Array(places.enumerated()), id: \.offset) { index, place in
+                            let imageName = homeViewModel.imagesList[index % (places.count - 1)]
+                            RoomCard(imageName: imageName, placeName: place.name) {
+                                selectedPlace = imageName
+                                placeName = place.displayName
+                                homeViewModel.place = place
+                                homeViewModel.update()
+                            }
                         }
-                        RoomCard(imageName: "Image_default", placeName: "Random")
-                        RoomCard(imageName: "Image_default", placeName: "Apatlaco")
                     }
                 }
 
             }
             .padding()
+            .onAppear(perform: {
+                let res = homeViewModel.fetchAllPlaces(context: viewContext)
+                var savedPlaces: [Place] = []
+                for place in res {
+                    let metaPlace = Place(id: Int(place.id),
+                                          lat: place.latitude ?? "",
+                                          lon: place.longitude ?? "",
+                                          name: place.name ?? "",
+                                          displayName: place.displayName ?? "")
+                    savedPlaces.append(metaPlace)
+                }
+                self.places = savedPlaces
+                print("recolectado exitosamente")
+            })
         }
     }
 
@@ -106,6 +134,6 @@ struct HomeView: View {
 
 struct HomeView_Previews: PreviewProvider {
     static var previews: some View {
-        HomeView()
+        HomeView(homeViewModel: .init())
     }
 }

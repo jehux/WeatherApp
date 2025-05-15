@@ -36,11 +36,11 @@ extension APIRequestType {
 }
 
 struct WeatherRequest: APIRequestType {
-    typealias ModelType = PlacesListResponse
+    typealias ModelType = WeatherResponse
     
     var path: String
     var method: String { return "GET" }
-    var headers: [String: String]? { return ["Content-Type": "application/json"] }
+    var headers: [String: String]? { return ["Accept": "application/json"] }
     var queryItems: [URLQueryItem]?
     func body() throws -> Data? {
         return Data()

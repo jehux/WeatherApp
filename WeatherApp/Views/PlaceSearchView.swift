@@ -11,11 +11,7 @@ struct PlaceSearchView: View {
     @ObservedObject private(set) var placeSearchViewModel: PlaceSearchViewModel
     @State private var searchText: String = ""
 
-    let recentSearches = [
-        ("UX/UI Designer", "İstanbul, Avrupa"),
-        ("Ürün Yöneticisi", "İstanbul, Asya"),
-        ("Satış Danışmanı", "Ankara, Çankaya")
-    ]
+    @Environment(\.dismiss) var dismiss
 
     var body: some View {
         VStack(spacing: 16) {
@@ -73,5 +69,8 @@ struct PlaceSearchView: View {
         .padding(.top)
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Buscar nuevo lugar")
+        .onChange(of: placeSearchViewModel.shouldCloseView) {
+            dismiss()
+        }
     }
 }

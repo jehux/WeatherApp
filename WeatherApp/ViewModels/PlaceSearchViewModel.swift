@@ -31,6 +31,7 @@ final class PlaceSearchViewModel: ObservableObject {
     @Published var query: String = ""
 
     @Published var isLoading: Bool = false
+    @Published var shouldCloseView = false
     
     init(placesService: APIServiceType = PlacesAPIService(), context: NSManagedObjectContext) {
         self.placesService = placesService
@@ -76,6 +77,7 @@ final class PlaceSearchViewModel: ObservableObject {
         do {
             try context.save()
             print("✅ place guardardo en Core Data")
+            shouldCloseView = true
         } catch let error as NSError {
             print("❌ Error al guardar: \(error), \(error.userInfo)")
         }

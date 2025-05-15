@@ -15,7 +15,7 @@ final class HomeViewModel: ObservableObject {
     
     private let onAppearSubject = PassthroughSubject<Void, Error>()
     
-    private let placesService: APIServiceType
+    private let weatherService: APIServiceType
 
     // Publish values on-demand by calling the send() method
     func update() {
@@ -23,28 +23,33 @@ final class HomeViewModel: ObservableObject {
         //objectWillChange.send()
     }
     
-    private var places: [Place] = []
+    @Published var place: Place? = nil
     
     @Published var isErrorShown = false
     @Published var errorMessage = ""
-    @Published var place: Place? = nil
+    @Published var temperature = ""
+    @Published var weather: WeatherResponse? = nil
     @Published var isLoading: Bool = false
+    @Published var isDaytime: Bool = false
+    @Published var windspeed: String = ""
+    @Published var windsUnit: String = ""
+    @Published var imagesList = ["tokio","argentina", "mumbai", "buenos_aires", "cape_town", "florencia", "Image_default", "reykjavik", "spain", "vancouver"]
     
-    init(placesService: APIServiceType = PlacesAPIService()) {
-        self.placesService = placesService
+    init(weatherService: APIServiceType = WeatherAPIService()) {
+        self.weatherService = weatherService
 
         fetchWeather()
         print("------- Home view model init done ---------")
     }
 
-    private func fetchWeather() {
+    func fetchWeather() {
         onAppearSubject
-                .flatMap { [unowned self] _ -> AnyPublisher<[Place], Error> in
+                .flatMap { [unowned self] _ -> AnyPublisher<WeatherResponse, Error> in
                     let latitude = self.place?.lat.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
                     let longitude = self.place?.lon.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-                    let endpoint = PlacesListRequest(path: "?latitude=\(latitude)&longitude=\(longitude)&current_weather=true")
+                    let endpoint = WeatherRequest(path: "?latitude=\(latitude)&longitude=\(longitude)&current_weather=true")
                     self.isLoading = true
-                    return self.placesService.call(from: endpoint)
+                    return self.weatherService.call(from: endpoint)
                 }
                 .receive(on: DispatchQueue.main)
                 .sink(receiveCompletion: { completion in
@@ -53,13 +58,18 @@ final class HomeViewModel: ObservableObject {
                     case .failure(let error): do {
                         self.errorMessage = error.localizedDescription
                         self.isErrorShown = true
+                        print(self.errorMessage)
                         }
                     case .finished:
                         break
                     }
-                }, receiveValue: { (places) in
+                }, receiveValue: { (weather) in
                     self.isLoading = false
-                    self.places = places
+                    self.weather = weather
+                    self.temperature = String(weather.currentWeather.temperature)
+                    self.isDaytime = weather.currentWeather.isDay == 1
+                    self.windspeed = String(weather.currentWeather.windspeed)
+                    self.windsUnit = String(weather.currentWeatherUnits.windspeed)
                 })
                 .store(in: &cancellables)
     }
